@@ -1,0 +1,177 @@
+select * from emp 
+where sal * 12 = 36000;
+
+select*from emp
+where sal >= 3000;
+
+select * from emp
+where ename >= 'F'
+order by ename;
+
+select *from emp
+where ename <= 'FORZ';
+
+select * from emp
+where sal != 3000;
+
+select *from emp
+where job = 'MANAGER' or job = 'SALESMAN' or job = 'CLERK';
+
+select * from emp 
+where job in ('MANAGER','SALESMAN','CLERK');
+
+select * from emp 
+where job not in ('MANAGER','SALESMAN','CLERK');
+
+select * from emp
+where sal >= 2000 and sal <= 3000;
+
+select * from emp
+where sal between 2000 and 3000;
+
+
+select * from emp
+where sal not between 2000 and 3000
+order by sal;
+
+select * from emp
+where ename like 'S%';
+
+select * from emp
+where ename like '%S%'
+order by ename;
+
+select * from emp
+where ename like '_L%' /*이름의 두번째 글자가 L인 사람을 찾는다.*/
+order by ename;
+
+select * from emp
+where ename like '%AM%';
+
+select * from emp 
+where ename like 'A@_A%' escape '@'; -- A_A로 시작되는 것을 검색
+
+select * from emp
+where comm is null;
+
+select * from emp 
+where mgr is not null;
+
+select * from emp
+where comm is null;
+
+select * from emp 
+where sal > 0;
+
+select * from emp
+where comm is null and sal > 0;
+
+create table emp2
+as 
+select * from emp; -- 복제
+
+select * from emp2; -- 확인 
+
+commit; -- 확정
+
+select empno, ename, sal, deptno -- 컬럼수 4개 : 컬럼의 개수가 같아야 한다.
+from emp
+where deptno = 10
+union --union all은 중복을 포함한 모든 자료를 받는다.
+select empno, ename, sal, deptno -- 컬럼수 4개 : 컬럼의 개수가 같아야 한다.
+from emp2
+where deptno = 20
+order by sal; -- 테이블이 서로 다를때 사용한다.
+
+select empno, ename, sal, deptno
+from emp
+minus
+select empno, ename, sal, deptno
+from emp
+where deptno = 10; -- 차집합
+
+select empno, ename, sal, deptno
+from emp
+intersect
+select empno, ename, sal, deptno
+from emp
+where deptno = 10; -- 교집합
+
+select ename, upper(ename), lower(ename), initcap(ename)
+from emp;
+
+select ename, length(ename)
+from emp
+where length(ename) >= 5;
+
+select job, substr(job, 1, 2), substr(job, 3, 2), substr(job, 5)
+from emp;
+
+select job,
+substr(job, -length(job)),
+substr(job, -length(job),2),
+substr(job, -3)
+from emp;
+
+select instr('Hello Oracle', 'l') as instr_1,
+instr('Hello Oracle', 'l', 5) as instr_2, -- 글자의 5번째 부터 'L'을 찾는다.
+instr('Hello Oracle', 'l', 2, 2) as instr_3 -- 글자의 2번째 부터 2번째 'L'을 찾는다.
+from dual;
+
+select '010-1234-5678' as replace_before,
+replace('010-1234-5678', '-', ' ') as replace_1,
+replace('010-1234-5678', '-') as replace_2
+from dual;  
+
+select 'Oracle',
+lpad('Oracle', 10, '#') as lapd_1, 
+rpad('Oracle', 10 , '*') as rapd_1,
+lpad('Oracle', 10) as lapd_1,
+rpad('Oracle' , 10) as rpad_2
+from dual;
+
+select ename, lpad(ename, 20), lpad(ename, 20, '@') from emp;
+
+select 'sql' || '은 rdb에서 사용하는 언어입니다' from dual; -- ||은 문자열을 연결한다.
+
+select '[' || trim('                   oralce                         ') || ']' as trim
+from dual; --trim은 문자열의 공백을 지워 준다.
+
+
+select '[' || rtrim('                   oralce                         ') || ']' as trim
+from dual; --왼쪽만 제거
+
+select '[' || ltrim('                   oralce                         ') || ']' as trim
+from dual; --오른쪽만 제거
+
+SELECT mod(15, 6) from dual; -- 모드는 나머지를 제출
+
+SELECT SYSDATE, 
+add_months(sysdate, 3)
+FROM dual;
+
+select empno, ename, hiredate, sysdate,
+MONTHS_BETWEEN(hiredate, sysdate) as months_1,
+MONTHS_BETWEEN(sysdate, hiredate) as months_2,
+trunc(months_between(sysdate, hiredate)) as months_3
+from emp;
+
+select sysdate from dual;
+
+select to_char(sysdate, 'yyyy-mm-dd hh:mi:ss') from dual; --날짜를 출력하여 형식을 바꾸는 것
+
+select to_char(sysdate, 'Q') from dual; --분기를 구한다.
+ 
+select ename, hiredate, to_char(hiredate, 'Q') from emp;
+
+select sal,
+to_char(sal, '$999,999') as sal_$,
+to_char(sal, 'L999,999') as sal_L,
+to_char(sal, '$999,999.00') as sal_1,
+to_char(sal, '$000,999,999.00') as sal_2,
+to_char(sal, '$999,999.00') as sal_3,
+to_char(sal, '$000999,999.99') as sal_4
+from emp; --9는 숫자의 한 자리를 의미, 0은 0으로 채움, L은 지역화폐 기호를 붙여서 출력
+
+select to_char(to_date('2018-07,14', 'yyyy-mm-dd'), 'yyyy-mm-dd hh24:mi:ss') as todate1 from dual; --시, 분, 초는 00시 00분 00초로 고정
+
