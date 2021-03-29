@@ -1,0 +1,242 @@
+SELECT 1300 - '1500',
+'1300' + 1500
+from dual;
+
+SELECT to_number('1,300', '999,999') - to_number('1,500', '999,999') as result
+from dual;
+
+SELECT
+    *
+FROM emp;
+
+SELECT
+    *
+FROM emp
+where hiredate > TO_DATE('1981/06/01', 'yyyy/mm/dd');
+
+SELECT
+    *
+FROM emp
+where hiredate > '1981/06/01'; -- 기본적으로 oracle은 형변화를 해준다. 
+
+SELECT empno, ename, sal, comm, sal+comm,
+nvl(comm, 0),
+sal+nvl(comm, 0)
+from emp; --null을 0으로 변환
+
+SELECT ename, comm, nvl2(comm, 'o', 'x') as comm2 from emp; -- null일 경우 o null이 아닌 경우 x
+
+SELECT ename, job, decode(job, 'MANAGER', 'ok', 'cancel')
+from emp; -- job 열에서 parameter가 MANAGER이면 ok이고, 아니면 cancel (3항연산자와 비슷하다.)
+
+SELECT ename, job, decode(job, 'MANAGER', 'M', 
+                               'SALESMAN', 'S', 
+                               'CLARK','C',
+                               'ETC') as job2
+from emp; -- parameter를 다양하게 넣어서 간단히 요약을 한다.
+
+SELECT empno, ename, job, sal, decode(job, 'MANAGER', SAL*1.1, 
+                                            'SALESMAN', SAL*1.05, 
+                                            'ANALYST', SAL, 
+                                            SAL*1.03) AS UPSAL
+FROM EMP; --EMP를 통해서 급여 인상을 만드는 방법
+
+SELECT EMPNO, SAL,
+        CASE JOB
+            WHEN 'MANAGER' THEN SAL*1.1
+            WHEN 'SALEMAN' THEN SAL*1.05
+            WHEN 'ANALYST' THEN SAL
+            ELSE SAL * 1.03
+        END AS UPSAL
+FROM EMP; -- END로 끝내야한다. ,를 생략한다.
+
+SELECT EMPNO, ENAME, COMM,
+        CASE
+            WHEN COMM IS NULL THEN '해당사항 없음'
+            WHEN COMM = 0 THEN '수당없음'
+            WHEN COMM > 0 THEN '수당 : ' || COMM
+        END AS COMM_TEXT
+FROM EMP; -- 비교 연산식을 이용, 범위 비교가 가능하다.
+
+SELECT SUM(SAL) AS TOTALSAL 
+FROM EMP; -- SUM을 통해서 합계를 구한다.
+
+SELECT COUNT(SAL) AS TOTALSAL
+FROM EMP; -- 갯수를 센다
+
+SELECT AVG(SAL) AS TOTOALSAL
+FROM EMP; -- 평균을 구한다
+
+SELECT MAX(SAL) AS TOTALSAL
+FROM EMP; -- 최댓값을 구한다
+
+SELECT MIN(SAL) AS TOTALSAL
+FROM EMP; -- 최소값을 구한다. 
+
+SELECT COUNT(COMM) AS CNT
+FROM EMP; -- NULL 값을 포함하지 않는다.(COUNT)
+
+SELECT AVG(COMM) AS CNT
+FROM EMP; -- NULL 값을 포함하지 않는다. (AVG)
+
+SELECT AVG(NVL(COMM, 0)) AS AVERAGE
+FROM EMP; --NULL 값을 포함하여 평균을 구하는 방법 (NVL)
+
+SELECT SUM(COMM)/COUNT(COMM) AS AVERAGE
+FROM EMP;
+
+SELECT COUNT(*) FROM EMP; -- NULL을 포함한 모든 행을 구한다. (*)
+
+SELECT AVG(SAL), '10' AS DEPTNO FROM EMP WHERE DEPTNO = 10
+UNION ALL
+SELECT AVG(SAL), '20' AS DEPTNO FROM EMP WHERE DEPTNO = 20
+UNION ALL
+SELECT AVG(SAL), '30' AS DEPTNO FROM EMP WHERE DEPTNO = 30; -- 부서별 급여 평균 구하기 UNION ALL
+
+SELECT AVG(SAL), DEPTNO
+FROM EMP
+GROUP BY DEPTNO; -- 부서별 평균을 구하기 (GROUP BY)
+
+SELECT SUM(SAL), DEPTNO
+FROM EMP
+GROUP BY DEPTNO; -- 부서별 합계 구하기 (GROUP BY)
+
+SELECT COUNT(*), DEPTNO 
+FROM EMP
+GROUP BY DEPTNO; -- 부서원 세기 (GROUP BY, *)
+
+SELECT MAX(SAL), DEPTNO
+FROM EMP
+GROUP BY DEPTNO; -- 각 부서별 최댓값 구하기
+
+SELECT MIN(SAL), DEPTNO
+FROM EMP
+GROUP BY DEPTNO; -- 각 부서별 최솟값 구하기
+
+SELECT ENAME, DEPTNO, JOB
+FROM EMP
+ORDER BY DEPTNO, JOB;
+
+SELECT DEPTNO, JOB, AVG(SAL)
+FROM EMP
+GROUP BY DEPTNO, JOB
+ORDER BY DEPTNO, JOB; --GROUP BY절에 없는 열을 SELECT절에 포함하면 오류가 난다.
+
+SELECT DEPTNO, JOB, AVG(SAL)
+FROM EMP
+GROUP BY DEPTNO, JOB
+HAVING AVG(SAL) >= 2000
+ORDER BY DEPTNO, JOB; --HAVING을 이용해서 GROUP에 조건을 걸 수 있다.
+
+SELECT DEPTNO, JOB, AVG(SAL)
+FROM EMP
+WHERE DEPTNO > 10
+GROUP BY DEPTNO, JOB
+HAVING AVG(SAL) >= 2000
+ORDER BY DEPTNO, JOB; --WHERE은 GROUP BY, HAVING 절 보다 먼저 실행 된다. 
+
+SELECT DEPTNO, JOB, COUNT(*), MAX(SAL), SUM(SAL), AVG(SAL)
+FROM EMP
+GROUP BY DEPTNO, JOB
+ORDER BY DEPTNO, JOB; -- GROUP BY을 사용해 그룹화
+
+SELECT DEPTNO, JOB, COUNT(*), MAX(SAL), SUM(SAL), AVG(SAL)
+FROM EMP
+GROUP BY ROLLUP(DEPTNO, JOB); -- ROLLUP을 통해 소계를 그룹화한다.
+                              -- 부서별로 소계 그리고 전체 통계를 그룹화 한다.
+
+SELECT DEPTNO, JOB, COUNT(*), MAX(SAL), SUM(SAL), AVG(SAL)
+FROM EMP
+GROUP BY CUBE(DEPTNO, JOB); -- TOTAL 부터 나온다. 
+
+SELECT DEPTNO, JOB, COUNT(*), MAX(SAL), SUM(SAL), AVG(SAL)
+FROM EMP
+GROUP BY CUBE(DEPTNO, JOB)
+ORDER BY DEPTNO, JOB; -- ORDER BY를 통해 sorting울 한다. JOB을 기준으로 소계를 한번 더 통계를 내준다.
+
+SELECT DEPTNO, JOB, COUNT(*), MAX(SAL), SUM(SAL), AVG(SAL)
+FROM EMP
+GROUP BY JOB, 
+ROLLUP(DEPTNO); --JOB으로 결과를 가져온다.
+
+SELECT DEPTNO, JOB, COUNT(*)
+FROM EMP
+GROUP BY GROUPING SETS(DEPTNO, JOB)
+ORDER BY DEPTNO, JOB; -- GROUPING을 따로해서 결과를 보여준다.
+
+SELECT *
+FROM
+(SELECT DEPTNO, JOB, COUNT(*), MAX(SAL), SUM(SAL), AVG(SAL),
+GROUPING(DEPTNO),
+GROUPING(JOB) AS GROUPINGJOB
+FROM EMP
+GROUP BY CUBE(DEPTNO, JOB)
+ORDER BY DEPTNO, JOB) A   -- 0은 GROUPING화 가 되었다. 1은 GROUPING화가 되지 않았다.
+WHERE GROUPINGJOB =1;     -- ()괄호 안에 있는 쿼리를 서브 쿼리라고 한다. A라는 메모리안에 서브 쿼리의 정보가 있다.
+                     
+SELECT DEPTNO, 
+       LISTAGG(ENAME, ', ')
+       WITHIN GROUP(ORDER BY SAL DESC) AS ENAMES
+FROM EMP
+GROUP BY DEPTNO; -- COMMA(',')를 붙여서 급여가 높은 사람 순서대로 나열한다.(LISTAGG)
+
+SELECT DEPTNO, JOB, MAX(SAL)
+FROM EMP
+GROUP BY DEPTNO, JOB
+ORDER BY DEPTNO, JOB; --부서별 직종별 최댓값 구하기 밑으로 정렬
+
+SELECT
+    *
+FROM(SELECT DEPTNO, JOB, SAL
+     FROM EMP)
+PIVOT (MAX(SAL)
+       FOR DEPTNO IN (10, 20, 30)
+       )
+       ORDER BY JOB; -- SELECT DEPTNO, JOB, SAL FROM EMP를 PIVOT 하여 10, 20, 30이 '열'로 변경된다.
+                     -- 종방향을 횡방향으로 바꾸는 것이 PIVOT (<-> UNPIVOT)
+
+SELECT DEPTNO,
+    MAX(DECODE(JOB, 'CLERK', SAL)) AS "CLERK",
+    MAX(DECODE(JOB, 'SALESMAN', SAL)) AS "SALESMAN",
+    MAX(DECODE(JOB, 'PRESIDENT', SAL)) AS "PRESIDENT",
+    MAX(DECODE(JOB, 'MANAGER', SAL)) AS "MANAGER",
+    MAX(DECODE(JOB, 'ANALYST', SAL)) AS "ANALYST"
+FROM EMP
+GROUP BY DEPTNO
+ORDER BY DEPTNO; --PIBOT을 사용하지 않고 위치를 바꾸는 것(최댓값을 구한다)
+
+SELECT
+    *
+FROM(SELECT JOB, DEPTNO, SAL
+    FROM EMP)
+PIVOT(MAX(SAL)
+    FOR JOB IN ('CLERK' AS CLERK,
+                'SALESMAN' AS SALESMAN,
+                'PRESIDENT' AS PRESIDENT,
+                'MANAGER' AS MANAGER,
+                'ANALYST' AS ANALYST)
+        )
+ORDER BY DEPTNO; -- PIBOT을 사용하여 위치를 바꿈
+
+SELECT '분기별 입사자 수' AS GUBUN,
+    SUM(DECODE(TO_CHAR(HIREDATE, 'Q'),1,1,0)) AS Q1,
+    SUM(DECODE(TO_CHAR(HIREDATE, 'Q'),2,1,0)) AS Q2,
+    SUM(DECODE(TO_CHAR(HIREDATE, 'Q'),3,1,0)) AS Q3,
+    SUM(DECODE(TO_CHAR(HIREDATE, 'Q'),4,1,0)) AS Q4
+FROM EMP group by '분기별 입사자 수';
+
+SELECT
+    *
+FROM(SELECT DEPTNO,
+    MAX(DECODE(JOB, 'CLERK', SAL)) AS "CLERK",
+    MAX(DECODE(JOB, 'SALESMAN', SAL)) AS "SALESMAN",
+    MAX(DECODE(JOB, 'PRESIDENT', SAL)) AS "PRESIDENT",
+    MAX(DECODE(JOB, 'MANAGER', SAL)) AS "MANAGER",
+    MAX(DECODE(JOB, 'ANALYST', SAL)) AS "ANALYST"
+FROM EMP
+GROUP BY DEPTNO
+ORDER BY DEPTNO)
+UNPIVOT(
+SAL FOR JOB IN (CLERK, SALESMAN, PRESIDENT, MANAGER, ANALYST))
+ORDER BY DEPTNO, JOB; -- UNPIBOT을 사용하며 횡 방향을 종 방향으로 변경
+
