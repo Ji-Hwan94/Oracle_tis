@@ -1,0 +1,258 @@
+CREATE TABLE table_pk2(
+login_id varchar2(20) CONSTRAINT TBLPK2_LGNID_PK PRIMARY KEY, -- PRIMARY KEY를 사용한다. INDEX는 자동생성
+login_pwd varchar2(20) CONSTRAINT TBLPK2_LGNPW_NN NOT NULL,   -- CONSTRAINT를 사용하면 제약 조건의 이름을 생성할 수 있다.
+tel VARCHAR2(20)
+);
+
+INSERT INTO TABLE_PK2(LOGIN_ID, LOGIN_PWD, TEL)  
+VALUES('TEST_ID_01', 'PWD01', '010-1234-5678');
+
+UPDATE TABLE_PK2 SET   -- PK는 업데이트도 불가능 하다.
+ID = 'TEST_ID_01'     
+WHERE ID = 'TEST_ID_02';
+
+desc table_pk2;
+
+CREATE TABLE TABLE_NAME(  -- 접근 제한자를 만드는 다른 방법
+    COL1 VARCHAR2(20),
+    COL2 VARCHAR2(20),
+    COL3 VARCHAR2(20),
+    PRIMARY KEY(COL1),
+    CONSTRAINT CONSTRAINT_NAME UNIQUE(COL2)
+);
+
+SELECT  -- 다른 곳에서 PK를 설정해야만 여기서 FOREIGN KEY를 설정 할 수 있다.(참조 무결성)
+    *   -- JOIN은 이것과 무관하다.
+FROM EMP;
+
+CREATE TABLE DEPT_FK( 
+DEPTNO NUMBER(2) CONSTRAINT DEPTFK_DEPTFK_DEPTNO_PK PRIMARY KEY,
+DNAME VARCHAR2(14),
+LOC VARCHAR2(13)
+);
+
+CREATE TABLE EMP_FK(
+EMPNO NUMBER(4) CONSTRAINT EMPFK_EMPNO_PK PRIMARY KEY,
+ENAME VARCHAR2(10),
+JOB VARCHAR2(9),
+MGR NUMBER(4),
+HIREDATE DATE,
+SAL NUMBER(7, 2),
+COMM NUMBER(7, 2),
+DEPTNO NUMBER(2) CONSTRAINT EMPFK_DEPTNO_FK REFERENCES DEPT_FK (DEPTNO) ON DELETE CASCADE -- FOREIGN KEY 생성 및 FK에 이름 정하기, ON DELETE CASCADE는 DELETE를 쉽게하기 위해서 사용한다.(즉시 삭제 가능)
+);
+
+INSERT INTO DEPT_FK -- 데이터 삽입
+VALUES(10, 'TEST_DNAME', 'TEST_LOC');
+
+
+INSERT INTO EMP_FK
+VALUES(9999, 'TEST_NMANE', 'TEST_JOB', NULL, TO_DATE('2001/01/01', 'YYYY/MM/DD'), 3000, NULL, 10); -- 데이터 삽입
+INSERT INTO EMP_FK
+VALUES(1111, 'TEST_NMANE', 'TEST_JOB', NULL, TO_DATE('2001/01/01', 'YYYY/MM/DD'), 3000, NULL, 50); -- 오류, 50번의 부서가 없기 때문에 참조키에서 데이터 삽입을 막아준다.(FK의 참조 무결성)
+
+SELECT
+    *
+FROM emp_fk;
+
+SELECT
+    *
+FROM dept_fk;
+
+DELETE FROM dept_fk -- 참조키로 인해서 지울 수 없다. 참조하려는 값을 먼저 지워야 지워진다. 
+WHERE deptno = 10; 
+
+CREATE TABLE TABLE_CHECK(
+LOGIN_ID VARCHAR2(20) CONSTRAINT TBLCK_LOGINID_PK PRIMARY KEY, 
+LOGIN_PWD VARCHAR2(20) CONSTRAINT TBLCK_LOGINPW_CK CHECK(LENGTH(LOGIN_PWD) > 3), -- CHECK를 이용해서 열에 저장할 수 있는 값의 범위 또는 패턴을 정의한다. 조건식으로 지정
+TEL VARCHAR2(20)
+);
+
+INSERT INTO TABLE_CHECK
+VALUES('TEST_NANE', '123', '010-1234-2345'); -- CHECK의 조건으로 인해 비밀번호의 길이가 3이하인 경우 데이터를 저장 할 수 없다.
+
+CREATE TABLE TABLE_DEFAULT(
+LOGIN_ID VARCHAR(20) CONSTRAINT TBLCK2_LOGIN_PK PRIMARY KEY,
+LOGIN_PWD VARCHAR2(20) DEFAULT '1234',  -- DEFAULT를 통해 비밀번호의 기본 값을 정의할 수 있다.
+TEL VARCHAR2(20)
+);
+
+CREATE USER ORCLSTUDY -- SCOTT 계정으로 사용자 생성하기, 권한이 없어서 불가능
+IDENTIFIED BY ORACLE;
+
+create user oraclstudy
+IDENTIFIED by oracle; -- 사용자 생성
+
+grant create SESSION to oraclstudy; -- create session으로 권한을 부여하여, 접속이 가능하다.
+
+ALTER user oraclstudy -- 사용자 비밀번호 변경
+IDENTIFIED by orcl;
+
+drop user oraclstudy; -- 사용자 삭제
+
+drop user oraclstudy cascade; -- 사용자 삭제 및 객체 모두 삭제
+
+grant RESOURCE, CREATE SESSION, create table to oraclstudy; -- 여러개 권한 부여 가능
+
+create table temp(
+    col1 varchar2(20),
+    col2 varchar2(20)
+);
+
+INSERT INTO temp
+VALUES('hi', 'bye');
+
+SELECT
+    *
+FROM temp;
+
+commit;
+
+GRANT SELECT on temp to oraclstudy; -- select 권한 부여
+
+revoke select on temp from oraclstudy; -- select 권한 해제
+
+-- 롤을 만드는 법 (cmd에서)
+conn system/oracle;  -- system 계정에 접속 username/pw 
+create role rolestudy; -- rolestudy에 롤을 만듬
+grant CONNECT, RESOURCE, create view, create synonym to rolestudy; -- CONNECT, RESOURCE, create view, create synonym 를 rolestudy에 부여를 합니다
+grant rolestudy to oraclstudy; -- oraclstudy에 rolestudy를 삽입한다.
+revoke rolestudy from oraclstudy; -- rolestudy에의 role의 권한들을 빼버린다.
+
+--PL/SQL
+SET SERVEROUTPUT ON; --쿼리를 실행할 설정을 하는 것 SET, 결과를 CONSOLE창에 올리는 것은 SERVEROUTPUT
+BEGIN 
+    DBMS_OUTPUT.put_line('Hello PL/SQL');  -- PUT_LINE을 이용해서 CONSOLE에 본다. SELECT문을 사용할 수 없다. 
+END;                                       -- 응용프로그램에서 위의 결과를 출력할수 없다. 
+/
+-- 디버깅용
+
+DECLARE
+V_EMPNO NUMBER(4) := 7788;  -- 대입연산자(:=), 자바에서의 (=) 
+V_ENAME VARCHAR(10);        -- 변수를 먼저 쓰고, 타입을 뒤에 쓴다 (자바의 반대)
+BEGIN
+V_ENAME := 'SCOTT';
+dbms_output.put_line('V_ENAME : '|| V_ENAME); -- 문자를 연결(||) 
+END;
+/
+
+DECLARE
+V_TAX CONSTANT NUMBER(1) := 3; -- 상수를 표현한다.(프로그램이 종료하기 전까지 값이 변하지 않는다.)
+BEGIN
+dbms_output.put_line('V_TAX : ' || V_TAX );
+END;
+/
+
+DECLARE
+V_DEPTNO NUMBER(2) DEFAULT 10; -- 초기값을 표현
+BEGIN
+DBMS_OUTPUT.put_line('V_DEPTNO : ' || V_DEPTNO);
+END;
+/
+
+DECLARE 
+V_DEPTNO NUMBER(2) NOT NULL := 10;
+BEGIN
+DBMS_OUTPUT.put_line('V_DEPTNO : ' || V_DEPTNO);
+END;
+/
+
+DECLARE 
+V_DEPTNO dept.deptno%TYPE := 50; -- 변수를 DEPT테이블의 DEPTNO열의 타입과 같은 타입으로 지정한다.
+BEGIN
+DBMS_OUTPUT.put_line('V_DEPTNO : ' || V_DEPTNO);
+END;
+/
+
+DECLARE 
+V_DEPT_ROW DEPT%ROWTYPE; -- RECODE TYPE, 변수의 참조형
+BEGIN
+SELECT DEPTNO, DNAME, LOC INTO V_DEPT_ROW -- SELCT를해서 변수에 저장 (INTO)를 사용한다.
+FROM DEPT
+WHERE DEPTNO = 40;
+DBMS_OUTPUT.PUT_LINE('DEPTNO : ' || V_DEPT_ROW.DEPTNO);
+DBMS_OUTPUT.PUT_LINE('DNAME : ' || V_DEPT_ROW.DNAME);
+DBMS_OUTPUT.PUT_LINE('LOC : ' || V_DEPT_ROW.LOC);
+END;  --DEPT TABLE의 DEPTNO의 번호가 40인 행의 정보를 가지고와서 변수에 대입한다.
+/  
+
+DECLARE 
+V_SCORE NUMBER := 87;
+BEGIN
+IF V_SCORE >= 90 THEN  --IF를 사용한다 조건식이 끝나고 난후에는 THEN를 사용한다
+DBMS_OUTPUT.PUT_LINE('A 학점'); 
+ELSIF V_SCORE >= 80 THEN -- ELSIF (JAVA에서의 ELSE IF)
+DBMS_OUTPUT.PUT_LINE('B 학점');
+ELSIF V_SCORE >= 70 THEN
+DBMS_OUTPUT.PUT_LINE('C 학점');
+ELSIF V_SCORE >= 60 THEN
+DBMS_OUTPUT.PUT_LINE('D 학점');
+ELSE
+DBMS_OUTPUT.PUT_LINE('F 학점');
+END IF; -- IF문을 끝낸다.
+END;
+/
+
+DECLARE
+V_SCORE NUMBER := 87;
+BEGIN 
+CASE TRUNC(V_SCORE/10) -- 나머지를 제외한 몫을 구하는 TRUNC
+WHEN 10 THEN DBMS_OUTPUT.PUT_LINE('A학점');
+WHEN 9 THEN DBMS_OUTPUT.PUT_LINE('A학점');
+WHEN 8 THEN DBMS_OUTPUT.PUT_LINE('B학점');
+WHEN 7 THEN DBMS_OUTPUT.PUT_LINE('C학점');
+WHEN 6 THEN DBMS_OUTPUT.PUT_LINE('D학점');
+ELSE  DBMS_OUTPUT.PUT_LINE('F학점');
+END CASE;  -- 비교 기준이 있는경우 -> 비교기준(변수, COLUM)과 조건식이 일치.
+END;
+/
+
+DECLARE
+V_SCORE NUMBER := 87;
+BEGIN 
+CASE -- CASE 옆에 비교 기준이 없다.
+WHEN V_SCORE >= 90 THEN DBMS_OUTPUT.PUT_LINE('A학점');
+WHEN V_SCORE >= 80 THEN DBMS_OUTPUT.PUT_LINE('A학점');
+WHEN V_SCORE >= 70 THEN DBMS_OUTPUT.PUT_LINE('B학점');
+WHEN V_SCORE >= 60 THEN DBMS_OUTPUT.PUT_LINE('C학점');
+WHEN V_SCORE >= 50 THEN DBMS_OUTPUT.PUT_LINE('D학점');
+ELSE  DBMS_OUTPUT.PUT_LINE('F학점');
+END CASE;  -- 비교 기준이 없는 경우 -> 조건식과 범위 비교 
+END;
+/
+
+DECLARE
+V_NUM NUMBER := 0; 
+BEGIN 
+LOOP -- 기본루프(무한루프)
+DBMS_OUTPUT.PUT_LINE ('현재 V_NUM : ' || V_NUM);
+V_NUM := V_NUM + 1;
+EXIT WHEN V_NUM > 4; -- 무한루프 중지 조건
+END LOOP;
+END;
+/
+
+BEGIN
+FOR I IN 0..4 LOOP -- 0부터 시작해서 4에서 끝난다.
+CONTINUE WHEN MOD(I, 2) = 1; -- 반복 조건 나머지 구해서 1이 되는 경우만 무시한다.
+DBMS_OUTPUT.PUT_LINE('현재의 값 : ' || I);
+END LOOP; -- 루프 종료
+END;
+/
+
+DECLARE 
+TYPE REC_DEPT IS RECORD( -- RECORD : 각기 다른 데이터를 하나의 변수에 저장하는데 사용한다
+DEPTNO NUMBER(2) NOT NULL := 99,
+DNAME DEPT.DNAME%TYPE,
+LOC DEPT.LOC%TYPE
+);
+DEPT_REC REC_DEPT; -- 레코드 변수의 이름
+BEGIN
+DEPT_REC.DEPTNO := 99;
+DEPT_REC.DNAME := 'DATABASE';
+DEPT_REC.LOC := 'SEOUL';
+DBMS_OUTPUT.PUT_LINE('DEPTNO : ' || DEPT_REC.DEPTNO);
+DBMS_OUTPUT.PUT_LINE('DNAME : ' || DEPT_REC.DNAME);
+DBMS_OUTPUT.PUT_LINE('DEPTNO : ' || DEPT_REC.LOC);
+END;
+/
