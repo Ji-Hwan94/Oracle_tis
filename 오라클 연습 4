@@ -1,0 +1,118 @@
+SELECT
+    *
+FROM employees;
+
+SELECT
+    *
+FROM jobs;
+
+SELECT employees.employee_id, employees.first_name, employees.last_name, jobs.job_title
+FROM EMPLOYEES, JOBS
+WHERE EMPLOYEES.job_id = jobs.job_id
+AND employees.employee_id > 200
+ORDER BY employees.employee_id; --검색 조건에 AND를 사용하여 연결
+
+--ANSI SQL
+SELECT employees.employee_id, employees.first_name, employees.last_name, jobs.job_title
+FROM EMPLOYEES INNER JOIN JOBS
+ON EMPLOYEES.job_id = jobs.job_id
+WHERE employees.employee_id > 200; -- JOIN조건에 ON을 사용하고, 일반 조건에 WHERE을 사용한다.
+
+-- TABLE을 3개를 사용하여 JOIN
+SELECT employees.employee_id, employees.first_name, employees.last_name, jobs.job_title, departments.department_id
+FROM EMPLOYEES, JOBS, DEPARTMENTS 
+WHERE EMPLOYEES.job_id = jobs.job_id
+AND employees.department_id = departments.department_id;
+
+--ANSI SQL을 이용해서 TABLE 3개 JOIN
+SELECT employees.employee_id, employees.first_name, employees.last_name, jobs.job_title, departments.department_id
+FROM EMPLOYEES INNER JOIN JOBS 
+ON EMPLOYEES.job_id = jobs.job_id
+JOIN departments
+ON  employees.department_id = departments.department_id;
+
+-- VIEW의 활용
+CREATE VIEW VIEWEMPLOEES 
+AS 
+SELECT employees.employee_id, employees.first_name, employees.last_name, jobs.job_title, departments.department_id
+FROM EMPLOYEES INNER JOIN JOBS 
+ON EMPLOYEES.job_id = jobs.job_id
+JOIN departments
+ON  employees.department_id = departments.department_id; -- VIEW는 데이터를 가지고 있지 않다. 
+
+SELECT
+    *
+FROM viewemploees; -- 복잡한 JOIN문에 VIEW문으로 만들어서 단순하게 만든다.
+
+
+
+--부서명, 주소를 출력하기
+SELECT d.department_name, l.street_address -- 데이터에 필요한 열을 입력한다.
+FROM departments d, locations l -- 가져올 테이블을 선택한다.
+WHERE d.location_id = l.location_id; -- 가져온 테이블들의 공통된 값을 가지는 열을 입력한다. (값 연결)
+
+--부서명, 주소, 국가 출력하기
+SELECT d.department_name, l.street_address, c.country_name
+FROM departments d, locations l, countries c
+WHERE d.location_id = l.location_id
+AND l.country_id = c.country_id;
+
+--회원 테이블 
+CREATE table member(
+id VARCHAR2(50) PRIMARY KEY,
+pw VARCHAR2(100) not null,
+name VARCHAR2(50) not null,
+address VARCHAR2(100),
+email VARCHAR2(50) not null,
+phone VARCHAR2(15) not null,
+joinDate date not null
+);
+
+insert into member values('hkd', '1234', '홍길동', '서울', 'ghkdrbqhd2@naver.com', '010-5612-4209', sysdate);
+insert into member values('lee', '4563', '이순신', '서울', 'qfffahd@bing.com', '010-1235-9899', sysdate);
+insert into member values('king', '2325', '왕건', '서울', 'ghkasd@google.com', '010-2122-3232', sysdate);
+insert into member values('sun', '7956', '이성계', '서울', 'qfqsd@nothing.com', '010-1231-1209', sysdate);
+insert into member values('die', '9845', '최영', '서울', 'qwtqgrg@hanmail.net', '010-4365-1111', sysdate);
+
+SELECT
+    *
+FROM member;
+
+commit;
+
+--게시판
+create table board(
+bno number PRIMARY KEY, --primary key
+title VARCHAR2(100) not null,
+content VARCHAR2(1000) not null,
+id VARCHAR2(50) not null,
+wDate date not null
+);
+
+INSERT into board VALUES(1, 'sql이란?', 'sql은 rdb언어입니다.', 'hkd', sysdate);
+INSERT into board VALUES(2, 'sql이란?', 'sql은 rdb언어입니다.', 'www', sysdate);
+
+SELECT
+    *
+FROM board;
+
+commit;
+
+--board와 member를 join, 글제목, 작성자명 출력
+select b.title, m.name
+from board b, member m
+where b.id = m.id;
+
+-- outer join 회원 이름을 다 나오게 하고, 누가 글을 썼는지에 대한 데이터 출력
+select b.title, m.name
+from board b, member m
+where b.id = m.id(+); --right outer join
+
+select m.name, b.title
+from member m, board b
+where m.id = b.id(+); --left outer join
+
+select m.name ,b.id, b.title
+from member m FULL OUTER JOIN board b 
+ON m.id = b.id; -- full outer join
+
