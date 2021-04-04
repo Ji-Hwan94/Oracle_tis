@@ -1,0 +1,444 @@
+--서브 쿼리
+SELECT
+    *
+FROM EMP
+WHERE SAL > (SELECT SAL  -- 단일행 서브쿼리
+                FROM EMP
+                WHERE ENAME = 'JONES'); 
+                
+SELECT
+    *
+FROM EMP
+WHERE hiredate < (SELECT hiredate
+                    FROM EMP
+                    WHERE ENAME = 'JONES');
+
+--부서 평균을 구하고, 평균보다 많은 받는 10번 부서원을 구한다.
+SELECT
+    *
+FROM EMP
+WHERE SAL >(SELECT AVG(SAL)
+FROM EMP
+WHERE DEPTNO = 10)
+AND DEPTNO = 10;
+
+--JOIN과 서브쿼리를 합침
+SELECT E.EMPNO, E.ENAME, E.JOB, E.SAL, D.DEPTNO, D.DNAME, D.LOC
+FROM EMP E, DEPT D
+WHERE E.DEPTNO = D.DEPTNO
+AND E.DEPTNO = 20
+AND E.SAL > (SELECT AVG(SAL)
+                FROM EMP);
+   
+--서브 쿼리의 값이 여러개인 경우 in을 사용한다. (다중행 서브쿼리)             
+SELECT
+    *
+FROM emp
+where sal in (SELECT max(sal) -- 서브쿼리의 조건이 하나라도 일치 할 경우 in을 사용한다.
+                from emp
+                group by deptno);
+
+-- any에 있는 조건들의 결과와 하나라도 일치하면 데이터에 포함 시킨다.                
+SELECT
+    *
+FROM emp
+where sal < any(SELECT sal 
+                    from emp
+                    where deptno = 30)
+order by sal, empno;
+
+-- all와의 조건들과 모두 일치해야 데이터에 결과 값을 리턴한다.
+SELECT
+    *
+FROM emp
+where sal < all(SELECT sal 
+                    from emp
+                    where deptno = 30)
+order by sal, empno;
+
+-- exists 연산자는 서브쿼리의 결과 있을 때 메인쿼리를 실행해준다. 
+SELECT
+    *
+FROM emp
+where EXISTS (SELECT dname
+                from dept
+                where deptno = 10);
+                
+-- 서브쿼리에서 리턴할 값의 개수가 2개다, deptno, sal               
+SELECT
+    *
+FROM emp
+where (deptno, sal) in (SELECT deptno, max(sal)
+                            from emp
+                            GROUP by deptno);
+                            
+select e10.empno, e10.ename, e10.deptno, d.dname, d.loc
+    from (SELECT
+        *
+    FROM emp where deptno = 10) e10, --from절에 사용하는 서브쿼리는 인라인 뷰라고 한다.
+    (SELECT
+        *
+    FROM dept) d
+where e10.deptno = d.deptno;
+
+select t1.deptno, emp.ename, t1.maxsal
+from (SELECT deptno, max(sal) as maxsal
+        FROM emp
+        GROUP by deptno) t1, emp -- 부서별 금여 최댓값을 구한다. t1을 inline veiw라고 한다.
+ where t1.deptno = emp.deptno -- join을 시도한다.
+ and t1.maxsal = emp.sal;
+ 
+ WITH --with를 사용한다.
+ e10 as (select*from emp where deptno = 10),
+ d as (select*From dept)
+ select e10.empno, e10.ename, e10.deptno, d.dname, d.loc
+    from e10, d
+    where e10.deptno = d.deptno;
+    
+WITH emp AS (
+    SELECT '7698' empno, 'BLAKE' ename, 'MANAGER' job, '30' deptno FROM dual UNION ALL
+    SELECT '7782' empno, 'CLARK' ename, 'MANAGER' job, '10' deptno FROM dual UNION ALL
+    SELECT '7566' empno, 'JONES' ename, 'MANAGER' job, '20' deptno FROM dual
+),
+dept_history as (
+    SELECT '7566' empno, '1981-04-02' sdate, '1991-04-01' edate, '10' deptno FROM dual UNION ALL
+    SELECT '7566' empno, '1991-04-02' sdate, '2001-04-01' edate, '30' deptno FROM dual UNION ALL
+    SELECT '7782' empno, '1981-06-09' sdate, '1991-06-08' edate, '40' deptno FROM dual
+)
+
+SELECT a.empno
+     , a.ename
+     , a.deptno
+  FROM emp a
+     , dept_history b
+ WHERE a.job = 'MANAGER'
+   AND a.empno = b.empno;
+   
+select empno, ename, job, sal, 
+(select grade from salgrade  -- 
+where e.sal between losal and hisal) as salgade, --colum을 생성
+deptno, -- 급여를 구해서 등급 범위를 구한다.
+(select dname from dept where e.deptno = dept.deptno) as dname
+from emp e;
+ 
+ select deptno, max(sal)
+ from emp
+ group by deptno;
+ 
+select '부서별 월급 최대값' as gubun,
+(select max(sal) from emp where deptno = 10) as "10",
+(select max(sal) from emp where deptno = 20) as "20",
+(select max(sal) from emp where deptno = 30) as "30"
+from dual;
+
+create table dept_temp
+as SELECT*FROM dept;
+
+INSERT into dept_temp(deptno, dname, loc)
+            values(50, 'database', 'seoul');
+INSERT into dept_temp(deptno, dname, loc)
+            values(60, 'network', 'busan');
+INSERT into dept_temp(deptno, dname, loc)
+            values(70, 'web', null); -- null 값 입력            
+INSERT into dept_temp(deptno, dname, loc)
+            values(80, 'mobile', '');
+INSERT into dept_temp(deptno, loc) -- 빈 열을 제외한다.
+            values(90, 'seoul'); -- 빈 열의 값을 제외한다.
+            
+SELECT
+    *
+FROM dept_temp;
+
+ROLLBACK;
+
+commit;
+
+create table emp_tempt
+as SELECT
+    *
+FROM emp
+where 1 <> 1; -- 테이블의 데이터를 제외하고 구성만 가져온다.
+
+SELECT
+    *
+FROM emp_tempt;
+
+insert into emp_tempt
+values(9999, '홍길동', 'PRESIDENT', NULL, '2001/01/01', 5000, 1000, 10);
+insert into emp_tempt
+values(1111, '성춘향', 'MANAGER', NULL, '2001-01-01', 4000, NULL, 20);
+
+
+SELECT
+    *
+FROM emp_tempt;
+
+SELECT ENAME, TO_CHAR(HIREDATE, 'YYYY-MM-DD HH24:MM:SS') AS HIREDATE FROM emp_tempt;
+
+insert into emp_tempt
+values(3111, '심청이', 'MANAGER', 9999, SYSDATE, 4000, NULL, 20); --SYSDATE는 현재시간을 알려준다
+
+SELECT ENAME, TO_CHAR(HIREDATE, 'YYYY-MM-DD HH24:MM:SS') AS HIREDATE FROM emp_tempt;
+
+SELECT
+    *
+FROM emp_tempt;
+
+
+
+insert into emp_tempt
+SELECT
+    *
+FROM emp; --데이터 복사
+
+SELECT
+    *
+FROM emp_tempt;
+
+create table dept_temp2
+as SELECT
+    *
+FROM dept;
+
+SELECT
+    *
+FROM dept_temp2;
+
+update dept_temp2 -- loc열의 데이터를 'seoul'로 바꿈
+set loc = 'seoul';
+
+SELECT
+    *
+FROM dept_temp2;
+
+rollback;
+
+update dept_temp2
+set loc = 'seoul'
+where deptno = 40;
+
+SELECT
+    *
+FROM dept_temp2;
+
+update dept_temp2
+set loc = 'seoul', dname = 'RnD'
+where deptno = 40;
+
+SELECT
+    *
+FROM dept_temp2;
+
+create table emp_temp2
+as
+SELECT
+    *
+FROM emp;
+
+SELECT
+    *
+FROM emp_temp2;
+
+delete from emp_temp2
+where job = 'MANAGER';
+
+SELECT
+    *
+FROM emp_temp2;
+
+commit;
+
+delete from emp_temp2
+where empno in(select e.empno -- 서브쿼리의 내용이 하나 이상이기 때문에 in을 사용한다
+from emp_temp2 e, salgrade s
+where e.sal between s.losal and s.hisal
+and s.grade = 3
+and deptno = 30);
+
+select*from emp_temp2;
+
+create table dept_tcl
+as
+SELECT
+    *
+FROM dept;
+
+SELECT
+    *
+FROM dept_tcl;
+
+UPDATE dept_tcl set loc = 'SEOUL'
+where deptno = 30;
+
+SELECT
+    *
+FROM dept_tcl; -- commit이 된것이 아니지 때문에 cmd에서는 원본으로 밖에 안보인다.
+commit;
+
+SELECT
+    *
+FROM dept_tcl;
+
+create table emp_alter
+as
+SELECT
+    *
+FROM emp;
+
+alter table emp_alter
+add hp varchar2(10); --열 변경 alter, add로 추가
+
+SELECT
+    *
+FROM emp_alter;
+
+alter table emp_alter -- rename으로 열 이름 변경
+rename column hp to tel; 
+
+alter table emp_alter -- modify로 열 타입 변경
+MODIFY empno number(5);
+
+desc emp_alter; -- 테이블 열 타입들을 볼 수 있다
+
+alter table emp_alter
+drop COLUMN tel;
+
+SELECT
+    *
+FROM emp_alter;
+
+rename emp_alter to emp_rename;
+
+SELECT
+    *
+FROM emp_rename;
+
+SELECT table_name --현재 가지고 있는 table들을 볼 수 있다.
+from user_tables;
+
+select owner, table_name --접속한 사용자가 소유하거나, 사용을 허가한 객체 정보
+from all_tables;
+
+create index idx_emp_sal -- emp테이블의 sal열을 인덱스 테이블로 생성한다
+on emp(sal);
+
+SELECT -- IDX_EMP_SAL을 보여준다
+    *
+FROM user_ind_columns --INDEX를 찾는 이름
+where index_name = 'IDX_EMP_SAL';
+
+drop index idx_emp_sal;
+
+select rownum, e.* --급여를 기준으로 내림차순 rownum가 뒤죽 박죽이다. 
+from emp e         -- paging처리를 위해 사용한다.
+order by sal desc;
+
+select rownum, e.* --rownum도 순서대로
+from (select *
+        from emp e
+        order by sal desc) e;
+        
+select rownum, e.* 
+from (select *
+        from emp e
+        order by sal desc) e
+where rownum <= 3 ; -- 급여를 많이 받는 사람들 중 상위 3명
+
+create sequence seq_dept_sequence -- 시퀀스 생성(번호 생성기) cache는 속도 향상에 도움을 주는 것이다.
+INCREMENT by 10                   --  nextvalue로 값을 추출할수 있다
+start with 10                     -- deptno는 10씩 증가
+maxvalue 90
+minvalue 0
+NOCYCLE
+cache 2; 
+
+create table dept_sequence
+as
+SELECT
+    *
+FROM dept where 1<>1;
+
+SELECT
+    *
+FROM dept_sequence;
+
+INSERT into dept_sequence(deptno, dname,loc) -- 값 삽입,
+values(seq_dept_sequence.nextval, 'DATABASE', 'SEOUL');
+
+SELECT
+    *
+FROM dept_sequence;
+
+INSERT into dept_sequence(deptno, dname,loc) -- 값 삽입,
+values(seq_dept_sequence.nextval, 'PROGRAMMER', 'BUSAN');
+
+SELECT
+    *
+FROM dept_sequence;
+
+SELECT SEQ_DEPT_SEQUENCE.currval
+from dual; -- 현재 deptno를 구한다.
+
+alter sequence seq_dept_sequence  --seq변경
+INCREMENT by 3                                   
+maxvalue 99
+CYCLE;  
+
+drop SEQUENCE seq_dept_sequence; -- seq 삭제
+
+create table table_notnull( --not null 지정하면 null을 넣어둘수 없다
+    login_id varchar2(20) not null,
+    login_pw varchar2(10) not null,
+    tel varchar2(20)
+);
+
+insert into table_notnull(login_id, login_pw,tel) -- 에러 발생 pw에 값이 없음
+values('TEST_ID01', null, '010-1234-5678');
+
+SELECT
+    *
+FROM user_constraints;
+
+alter table table_notnull -- 유형 변경
+modify(tel not null);
+
+desc table_notnull;
+
+create table table_unique(
+    login_in varchar2(20) unique,
+    login_pwd varchar2(20) not null,
+    tel varchar2(20)
+);
+
+desc table_unique;
+
+SELECT
+    *
+FROM user_constraints
+where table_name = 'TABLE_UNIQUE';
+
+INSERT INTO TABLE_UNIQUE(login_in, login_pwd, tel) -- unique는 같은 값을 또 넣을 수 없다.
+values('TEST ID 01', 'PWD01', '010-2345-6789');
+
+SELECT
+    *
+FROM table_unique;
+
+create table table_unique2
+as
+select *from table_unique
+where 1<>1;
+
+select*from table_unique2;
+
+alter table table_unique2
+modify(tel constraint TBLUNQ_TEL_UNQ unique);
+
+SELECT
+    *
+FROM user_constraints
+where table_name like 'TABLE_UNIQUE%';
+
+ALTER TABLE table_unique2
+drop constraint TBLUNQ_TEL_UNQ;
+
