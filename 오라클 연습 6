@@ -1,0 +1,26 @@
+create view v_employees_departments -- view
+as
+select employees.employee_id,
+employees.first_name, departments.department_name
+from employees join departments
+on employees.department_id = departments.department_id;
+
+SELECT
+    *
+FROM v_employees_departments; -- view를 따로 사용가능하다
+
+select*
+from(select employees.employee_id,
+employees.first_name, departments.department_name
+from employees join departments
+on employees.department_id = departments.department_id) a; -- inline view
+
+with
+a as (select employees.employee_id,
+employees.first_name, departments.department_name
+from employees join departments
+on employees.department_id = departments.department_id)
+SELECT
+    *
+FROM a; -- with 묶어서 전체를 select 한다.
+
