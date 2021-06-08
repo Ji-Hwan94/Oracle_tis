@@ -1,0 +1,11 @@
+-- 기존 테이블에 있는 데이터를 그대로 다시 복사(x2) , 임의로 많은 데이터를 만들어야할 때 사용.
+insert into tbl_board(bno, title, content, writer)
+select seq_board.nextval, title, content, writer from tbl_board;
+
+-- 행의 개수 출력
+select COUNT(*) from tbl_board;
+
+-- /*+ index를 내림차순으로 (테이블 이름, index 명:pk 이름과 같아야 한다.) */ => 데이터 양이 많을때 사용(order by 대신 사용)
+select /*+ index_desc(tbl_board pk_board) */
+* 
+from tbl_board;
